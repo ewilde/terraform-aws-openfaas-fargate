@@ -3,3 +3,4 @@ state.tf
 .terraform
 *.tfstate
 *.tfvars
+keys

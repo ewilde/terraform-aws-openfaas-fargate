@@ -3,7 +3,7 @@ resource "aws_ecs_cluster" "openfaas" {
 }
 
 resource "aws_ecs_service" "gateway" {
-    name             = "openfaas-core"
+    name             = "gateway"
     cluster          = "${var.ecs_cluster_name}"
     task_definition  = "${aws_ecs_task_definition.gateway.arn}"
     launch_type      = "FARGATE"
@@ -22,7 +22,7 @@ resource "aws_ecs_service" "gateway" {
     }
 
     service_registries {
-        registry_arn = "${aws_service_discovery_service.gateway.arn}"
+        registry_arn = "${aws_service_discovery_service.main.arn}"
     }
 
     lifecycle {
@@ -117,5 +117,45 @@ resource "aws_iam_role_policy" "ecs_role_policy" {
     }
   ]
 }
+EOF
+}
+
+module "nats" {
+    source                        = "./service-internal"
+    name                          = "nats"
+    ecs_cluster_name              = "${var.ecs_cluster_name}"
+    aws_region                    = "${var.aws_region}"
+    desired_count                 = "1"
+    security_groups               = ["${aws_security_group.service.id}"]
+    allowed_subnets               = ["${aws_subnet.internal.*.id}"]
+    namespace                     = "${var.namespace}"
+    service_discovery_service_arn = "${aws_service_discovery_service.main.arn}"
+    task_image                    = "nats-streaming"
+    task_image_version            = "0.9.2-linux"
+    task_role_arn                 = "${aws_iam_role.ecs_role.arn}"
+}
+
+
+module "ecs_provider" {
+    source                        = "./service-internal"
+    name                          = "ecs-provider"
+    ecs_cluster_name              = "${var.ecs_cluster_name}"
+    aws_region                    = "${var.aws_region}"
+    desired_count                 = "1"
+    security_groups               = ["${aws_security_group.service.id}"]
+    allowed_subnets               = ["${aws_subnet.internal.*.id}"]
+    namespace                     = "${var.namespace}"
+    service_discovery_service_arn = "${aws_service_discovery_service.main.arn}"
+    task_image                    = "ewilde/faas-ecs"
+    task_image_version            = "latest"
+    task_role_arn                 = "${aws_iam_role.ecs_role.arn}"
+    task_ports                    = "[{\"containerPort\":8081,\"hostPort\":8081}]"
+    task_env_vars                 = <<EOF
+[
+  {
+     "name"  : "port",
+     "value" : "8081"
+  }
+]
 EOF
 }

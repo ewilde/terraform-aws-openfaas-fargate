@@ -4,7 +4,7 @@ resource "aws_service_discovery_private_dns_namespace" "openfaas" {
     vpc = "${aws_vpc.default.id}"
 }
 
-resource "aws_service_discovery_service" "gateway" {
+resource "aws_service_discovery_service" "main" {
     name = "gateway"
     dns_config {
         namespace_id = "${aws_service_discovery_private_dns_namespace.openfaas.id}"
