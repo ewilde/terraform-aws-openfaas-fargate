@@ -27,15 +27,6 @@ resource "aws_security_group" "gateway" {
     }
 }
 
-resource "aws_security_group_rule" "gateway-ingress-ssh" {
-    type                     = "ingress"
-    security_group_id        = "${aws_security_group.gateway.id}"
-    from_port                = 22
-    to_port                  = 22
-    protocol                 = "tcp"
-    cidr_blocks              = ["${formatlist("%s/32", var.developer_ip)}"]
-}
-
 resource "aws_security_group_rule" "gateway-ingress-alb" {
     type                     = "ingress"
     security_group_id        = "${aws_security_group.gateway.id}"
@@ -88,6 +79,15 @@ resource "aws_security_group_rule" "service-ingress-gateway" {
     source_security_group_id = "${aws_security_group.gateway.id}"
     from_port                = 8080
     to_port                  = 8080
+    protocol                 = "tcp"
+}
+
+resource "aws_security_group_rule" "service-ingress-bastion" {
+    type                     = "ingress"
+    security_group_id        = "${aws_security_group.service.id}"
+    source_security_group_id = "${aws_security_group.bastion.id}"
+    from_port                = 22
+    to_port                  = 22
     protocol                 = "tcp"
 }
 
