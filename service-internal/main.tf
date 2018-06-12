@@ -49,10 +49,7 @@ resource "aws_ecs_task_definition" "main" {
     "name": "gateway",
     "healthCheck": {
         "retries": 1,
-        "command": [
-            "CMD-SHELL",
-            "ls"
-        ],
+        "command": ${var.task_health_check_command},
         "timeout": 3,
         "interval": 5,
         "startPeriod": 5

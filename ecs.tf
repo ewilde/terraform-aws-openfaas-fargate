@@ -22,7 +22,7 @@ resource "aws_ecs_service" "gateway" {
     }
 
     service_registries {
-        registry_arn = "${aws_service_discovery_service.main.arn}"
+        registry_arn = "${aws_service_discovery_service.gateway.arn}"
     }
 
     lifecycle {
@@ -129,10 +129,11 @@ module "nats" {
     security_groups               = ["${aws_security_group.service.id}"]
     allowed_subnets               = ["${aws_subnet.internal.*.id}"]
     namespace                     = "${var.namespace}"
-    service_discovery_service_arn = "${aws_service_discovery_service.main.arn}"
-    task_image                    = "nats-streaming"
+    service_discovery_service_arn = "${aws_service_discovery_service.nats.arn}"
+    task_image                    = "ewilde/nats-streaming"
     task_image_version            = "0.9.2-linux"
     task_role_arn                 = "${aws_iam_role.ecs_role.arn}"
+    task_ports                    = "[{\"containerPort\":8222,\"hostPort\":8222}]"
 }
 
 
@@ -145,7 +146,7 @@ module "ecs_provider" {
     security_groups               = ["${aws_security_group.service.id}"]
     allowed_subnets               = ["${aws_subnet.internal.*.id}"]
     namespace                     = "${var.namespace}"
-    service_discovery_service_arn = "${aws_service_discovery_service.main.arn}"
+    service_discovery_service_arn = "${aws_service_discovery_service.ecs_provider.arn}"
     task_image                    = "ewilde/faas-ecs"
     task_image_version            = "latest"
     task_role_arn                 = "${aws_iam_role.ecs_role.arn}"

@@ -11,5 +11,6 @@ variable "task_image" {}
 variable "task_image_version" {}
 variable "task_memory" { default = "64" }
 variable "task_ports" { default = "[]" }
+variable "task_health_check_command" { default = "[\"CMD-SHELL\",\"ls\"]" }
 variable "namespace" {}
 variable "aws_region" {}
