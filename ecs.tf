@@ -46,8 +46,8 @@ resource "aws_ecs_task_definition" "gateway" {
   "cpu": 256,
   "environment": [
     {
-      "name": "SECRET",
-      "value": "KEY"
+      "name": "functions_provider_url",
+      "value": "${aws_service_discovery_service.nats.name}.${aws_service_discovery_private_dns_namespace.openfaas.name}"
     }
   ],
   "essential": true,
