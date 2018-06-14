@@ -36,7 +36,16 @@ resource "aws_security_group_rule" "gateway-ingress-alb" {
     protocol                 = "tcp"
 }
 
-resource "aws_security_group_rule" "gateway-egress-provider" {
+resource "aws_security_group_rule" "gateway-egress-nats" {
+    type                     = "egress"
+    security_group_id        = "${aws_security_group.gateway.id}"
+    source_security_group_id = "${aws_security_group.service.id}"
+    from_port                = 4222
+    to_port                  = 4222
+    protocol                 = "tcp"
+}
+
+resource "aws_security_group_rule" "gateway-egress-ecs-provider" {
     type                     = "egress"
     security_group_id        = "${aws_security_group.gateway.id}"
     source_security_group_id = "${aws_security_group.service.id}"
@@ -73,12 +82,21 @@ resource "aws_security_group" "service" {
     }
 }
 
-resource "aws_security_group_rule" "service-ingress-gateway" {
+resource "aws_security_group_rule" "service-ingress-ecs-provider" {
     type                     = "ingress"
     security_group_id        = "${aws_security_group.service.id}"
     source_security_group_id = "${aws_security_group.gateway.id}"
-    from_port                = 8080
-    to_port                  = 8080
+    from_port                = 8081
+    to_port                  = 8081
+    protocol                 = "tcp"
+}
+
+resource "aws_security_group_rule" "service-ingress-nats" {
+    type                     = "ingress"
+    security_group_id        = "${aws_security_group.service.id}"
+    source_security_group_id = "${aws_security_group.gateway.id}"
+    from_port                = 4222
+    to_port                  = 4222
     protocol                 = "tcp"
 }
 
@@ -99,7 +117,6 @@ resource "aws_security_group_rule" "service-egress-http" {
     protocol           = "tcp"
     cidr_blocks        = ["0.0.0.0/0"]
 }
-
 
 resource "aws_security_group_rule" "service-egress-https" {
     type               = "egress"

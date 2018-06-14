@@ -47,7 +47,15 @@ resource "aws_ecs_task_definition" "gateway" {
   "environment": [
     {
       "name": "functions_provider_url",
+      "value": "${aws_service_discovery_service.ecs_provider.name}.${aws_service_discovery_private_dns_namespace.openfaas.name}"
+    },
+    {
+      "name": "faas_nats_address",
       "value": "${aws_service_discovery_service.nats.name}.${aws_service_discovery_private_dns_namespace.openfaas.name}"
+    },
+    {
+      "name": "faas_nats_port",
+      "value": "4222"
     }
   ],
   "essential": true,
