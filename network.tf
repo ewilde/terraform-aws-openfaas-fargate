@@ -92,6 +92,7 @@ resource "aws_subnet" "external" {
         "Name" = "${var.namespace}-external"
     }
 }
+
 resource "aws_subnet" "internal" {
     count                   = "${length(var.internal_subnets)}"
     vpc_id                  = "${aws_vpc.default.id}"

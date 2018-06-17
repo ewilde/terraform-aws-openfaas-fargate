@@ -68,6 +68,36 @@ resource "aws_security_group_rule" "bastion-egress-ssh" {
     protocol                 = "tcp"
 }
 
+resource "aws_security_group_rule" "bastion-egress-http" {
+    count                    = "${var.debug}"
+    type                     = "egress"
+    security_group_id        = "${aws_security_group.bastion.id}"
+    cidr_blocks              = ["0.0.0.0/0"]
+    from_port                = 80
+    to_port                  = 80
+    protocol                 = "tcp"
+}
+
+resource "aws_security_group_rule" "bastion-egress-https" {
+    count                    = "${var.debug}"
+    type                     = "egress"
+    security_group_id        = "${aws_security_group.bastion.id}"
+    cidr_blocks              = ["0.0.0.0/0"]
+    from_port                = 443
+    to_port                  = 443
+    protocol                 = "tcp"
+}
+
+resource "aws_security_group_rule" "bastion-egress-nats" {
+    count                    = "${var.debug}"
+    type                     = "egress"
+    security_group_id        = "${aws_security_group.bastion.id}"
+    source_security_group_id = "${aws_security_group.nats.id}"
+    from_port                = 4222
+    to_port                  = 4222
+    protocol                 = "tcp"
+}
+
 resource "aws_key_pair" "bastion_ssh" {
     key_name = "${var.bastion_keypair_name}"
     public_key = "${file("${path.module}/keys/${var.bastion_keypair_name}.pub")}"
