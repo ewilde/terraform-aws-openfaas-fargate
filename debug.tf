@@ -48,7 +48,7 @@ resource "aws_security_group" "bastion" {
     }
 }
 
-resource "aws_security_group_rule" "bastion-ingress-ssh" {
+resource "aws_security_group_rule" "bastion_ingress_ssh" {
     count                    = "${var.debug}"
     type                     = "ingress"
     security_group_id        = "${aws_security_group.bastion.id}"
@@ -58,7 +58,7 @@ resource "aws_security_group_rule" "bastion-ingress-ssh" {
     cidr_blocks              = ["${var.developer_ip}/32"]
 }
 
-resource "aws_security_group_rule" "bastion-egress-ssh" {
+resource "aws_security_group_rule" "bastion_egress_ssh" {
     count                    = "${var.debug}"
     type                     = "egress"
     security_group_id        = "${aws_security_group.bastion.id}"
@@ -68,7 +68,7 @@ resource "aws_security_group_rule" "bastion-egress-ssh" {
     protocol                 = "tcp"
 }
 
-resource "aws_security_group_rule" "bastion-egress-http" {
+resource "aws_security_group_rule" "bastion_egress_http" {
     count                    = "${var.debug}"
     type                     = "egress"
     security_group_id        = "${aws_security_group.bastion.id}"
@@ -78,7 +78,7 @@ resource "aws_security_group_rule" "bastion-egress-http" {
     protocol                 = "tcp"
 }
 
-resource "aws_security_group_rule" "bastion-egress-https" {
+resource "aws_security_group_rule" "bastion_egress_https" {
     count                    = "${var.debug}"
     type                     = "egress"
     security_group_id        = "${aws_security_group.bastion.id}"
@@ -88,13 +88,23 @@ resource "aws_security_group_rule" "bastion-egress-https" {
     protocol                 = "tcp"
 }
 
-resource "aws_security_group_rule" "bastion-egress-nats" {
+resource "aws_security_group_rule" "bastion_egress_nats" {
     count                    = "${var.debug}"
     type                     = "egress"
     security_group_id        = "${aws_security_group.bastion.id}"
     source_security_group_id = "${aws_security_group.nats.id}"
     from_port                = 4222
     to_port                  = 4222
+    protocol                 = "tcp"
+}
+
+resource "aws_security_group_rule" "bastion_egress_ecs_provider" {
+    count                    = "${var.debug}"
+    type                     = "egress"
+    security_group_id        = "${aws_security_group.bastion.id}"
+    source_security_group_id = "${aws_security_group.ecs_provider.id}"
+    from_port                = 8081
+    to_port                  = 8081
     protocol                 = "tcp"
 }
 

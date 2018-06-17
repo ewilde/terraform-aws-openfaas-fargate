@@ -8,7 +8,7 @@ resource "aws_security_group" "alb" {
     }
 }
 
-resource "aws_security_group_rule" "alb-ingress" {
+resource "aws_security_group_rule" "alb_ingress" {
     type                     = "ingress"
     from_port                = 80
     to_port                  = 80
@@ -27,7 +27,7 @@ resource "aws_security_group" "service" {
     }
 }
 
-resource "aws_security_group_rule" "service-ingress-bastion" {
+resource "aws_security_group_rule" "service_ingress_bastion" {
     type                     = "ingress"
     security_group_id        = "${aws_security_group.service.id}"
     source_security_group_id = "${aws_security_group.bastion.id}"
@@ -36,7 +36,7 @@ resource "aws_security_group_rule" "service-ingress-bastion" {
     protocol                 = "tcp"
 }
 
-resource "aws_security_group_rule" "service-egress-http" {
+resource "aws_security_group_rule" "service_egress_http" {
     type               = "egress"
     security_group_id  = "${aws_security_group.service.id}"
     from_port          = 80
@@ -45,21 +45,11 @@ resource "aws_security_group_rule" "service-egress-http" {
     cidr_blocks        = ["0.0.0.0/0"]
 }
 
-resource "aws_security_group_rule" "service-egress-https" {
+resource "aws_security_group_rule" "service_egress_https" {
     type               = "egress"
     security_group_id  = "${aws_security_group.service.id}"
     from_port          = 443
     to_port            = 443
     protocol           = "tcp"
     cidr_blocks        = ["0.0.0.0/0"]
-}
-
-resource "aws_security_group_rule" "service-egress-nats" {
-    count                    = "${var.debug}"
-    type                     = "egress"
-    security_group_id        = "${aws_security_group.service.id}"
-    source_security_group_id = "${aws_security_group.nats.id}"
-    from_port                = 4222
-    to_port                  = 4222
-    protocol                 = "tcp"
 }

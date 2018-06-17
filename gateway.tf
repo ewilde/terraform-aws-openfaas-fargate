@@ -44,7 +44,7 @@ resource "aws_ecs_task_definition" "gateway" {
   "environment": [
     {
       "name": "functions_provider_url",
-      "value": "${aws_service_discovery_service.ecs_provider.name}.${aws_service_discovery_private_dns_namespace.openfaas.name}"
+      "value": "http://${aws_service_discovery_service.ecs_provider.name}.${aws_service_discovery_private_dns_namespace.openfaas.name}:8081/"
     },
     {
       "name": "faas_nats_address",
@@ -93,7 +93,7 @@ resource "aws_security_group" "gateway" {
     }
 }
 
-resource "aws_security_group_rule" "gateway-ingress-alb" {
+resource "aws_security_group_rule" "gateway_ingress_alb" {
     type                     = "ingress"
     security_group_id        = "${aws_security_group.gateway.id}"
     source_security_group_id = "${aws_security_group.alb.id}"
@@ -102,16 +102,34 @@ resource "aws_security_group_rule" "gateway-ingress-alb" {
     protocol                 = "tcp"
 }
 
-resource "aws_security_group_rule" "gateway-egress-nats" {
+resource "aws_security_group_rule" "gateway_egress_nats" {
     type                     = "egress"
     security_group_id        = "${aws_security_group.gateway.id}"
     source_security_group_id = "${aws_security_group.nats.id}"
     from_port                = 4222
     to_port                  = 4222
+    protocol                 = "all"
+}
+
+resource "aws_security_group_rule" "gateway_egress_nats_management" {
+    type                     = "egress"
+    security_group_id        = "${aws_security_group.gateway.id}"
+    source_security_group_id = "${aws_security_group.nats.id}"
+    from_port                = 8222
+    to_port                  = 8222
     protocol                 = "tcp"
 }
 
-resource "aws_security_group_rule" "gateway-egress-http" {
+resource "aws_security_group_rule" "gateway_egress_ecs" {
+    type                     = "egress"
+    security_group_id        = "${aws_security_group.gateway.id}"
+    source_security_group_id = "${aws_security_group.ecs_provider.id}"
+    from_port                = 8081
+    to_port                  = 8081
+    protocol                 = "tcp"
+}
+
+resource "aws_security_group_rule" "gateway_egress_http" {
     type               = "egress"
     security_group_id  = "${aws_security_group.gateway.id}"
     from_port          = 80
@@ -120,7 +138,7 @@ resource "aws_security_group_rule" "gateway-egress-http" {
     cidr_blocks        = ["0.0.0.0/0"]
 }
 
-resource "aws_security_group_rule" "gateway-egress-https" {
+resource "aws_security_group_rule" "gateway_egress_https" {
     type               = "egress"
     security_group_id  = "${aws_security_group.gateway.id}"
     from_port          = 443

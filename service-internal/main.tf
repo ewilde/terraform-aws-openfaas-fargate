@@ -33,6 +33,7 @@ resource "aws_ecs_task_definition" "main" {
   {
     "cpu": ${var.task_cpu},
     "environment": ${var.task_env_vars},
+    "command": ${var.task_command},
     "essential": true,
     "image": "${var.task_image}:${var.task_image_version}",
     "memory": ${var.task_memory},

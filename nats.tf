@@ -11,7 +11,15 @@ module "nats" {
     task_image                    = "ewilde/nats-streaming"
     task_image_version            = "0.9.2-linux"
     task_role_arn                 = "${aws_iam_role.ecs_role.arn}"
-    task_ports                    = "[{\"containerPort\":8222,\"hostPort\":8222}]"
+    task_ports                    = "[{\"containerPort\":4222,\"hostPort\":4222}, {\"containerPort\":8222,\"hostPort\":8222}]"
+    task_command                  = <<CMD
+[
+    "--store",
+    "memory",
+    "--cluster_id",
+    "faas-cluster"
+]
+CMD
 }
 
 resource "aws_security_group" "nats" {
@@ -24,16 +32,25 @@ resource "aws_security_group" "nats" {
     }
 }
 
-resource "aws_security_group_rule" "nats-ingress-gateway" {
+resource "aws_security_group_rule" "nats_ingress_gateway" {
     type                     = "ingress"
     security_group_id        = "${aws_security_group.nats.id}"
     source_security_group_id = "${aws_security_group.gateway.id}"
     from_port                = 4222
     to_port                  = 4222
+    protocol                 = "all"
+}
+
+resource "aws_security_group_rule" "nats_management_ingress_gateway" {
+    type                     = "ingress"
+    security_group_id        = "${aws_security_group.nats.id}"
+    source_security_group_id = "${aws_security_group.gateway.id}"
+    from_port                = 8222
+    to_port                  = 8222
     protocol                 = "tcp"
 }
 
-resource "aws_security_group_rule" "nats-ingress-service" {
+resource "aws_security_group_rule" "nats_ingress_service" {
     type                     = "ingress"
     security_group_id        = "${aws_security_group.nats.id}"
     source_security_group_id = "${aws_security_group.service.id}"
@@ -42,11 +59,12 @@ resource "aws_security_group_rule" "nats-ingress-service" {
     protocol                 = "tcp"
 }
 
-resource "aws_security_group_rule" "nats-ingress-bastion" {
+resource "aws_security_group_rule" "nats_ingress_bastion" {
     type                     = "ingress"
     security_group_id        = "${aws_security_group.nats.id}"
     source_security_group_id = "${aws_security_group.bastion.id}"
     from_port                = 4222
     to_port                  = 4222
     protocol                 = "tcp"
+    count                    = "${var.debug}"
 }
