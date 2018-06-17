@@ -56,7 +56,7 @@ resource "aws_ecs_task_definition" "gateway" {
     }
   ],
   "essential": true,
-  "image": "functions/gateway:0.8.2",
+  "image": "ewilde/openfaas-gateway:latest-dev",
   "memory": 64,
   "memoryReservation": 64,
   "portMappings": [
@@ -100,6 +100,16 @@ resource "aws_security_group_rule" "gateway_ingress_alb" {
     from_port                = 8080
     to_port                  = 8080
     protocol                 = "tcp"
+}
+
+resource "aws_security_group_rule" "gateway_ingress_bastion" {
+    type                     = "ingress"
+    security_group_id        = "${aws_security_group.gateway.id}"
+    source_security_group_id = "${aws_security_group.bastion.id}"
+    from_port                = 8080
+    to_port                  = 8080
+    protocol                 = "tcp"
+    count                    = "${var.debug}"
 }
 
 resource "aws_security_group_rule" "gateway_egress_nats" {

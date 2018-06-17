@@ -17,6 +17,15 @@ resource "aws_security_group_rule" "alb_ingress" {
     security_group_id        = "${aws_security_group.alb.id}"
 }
 
+resource "aws_security_group_rule" "alb_egress" {
+    type                     = "egress"
+    from_port                = 8080
+    to_port                  = 8080
+    protocol                 = "tcp"
+    security_group_id        = "${aws_security_group.alb.id}"
+    source_security_group_id = "${aws_security_group.gateway.id}"
+}
+
 resource "aws_security_group" "service" {
     name = "${var.namespace}.service"
     description = "common security group for all services in the internal subnet"
