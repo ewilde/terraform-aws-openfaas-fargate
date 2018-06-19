@@ -45,6 +45,33 @@ resource "aws_security_group_rule" "service_ingress_bastion" {
     protocol                 = "tcp"
 }
 
+resource "aws_security_group_rule" "service_ingress_functions_from_gateway" {
+    type                     = "ingress"
+    security_group_id        = "${aws_security_group.service.id}"
+    source_security_group_id = "${aws_security_group.bastion.id}"
+    from_port                = 8080
+    to_port                  = 8080
+    protocol                 = "tcp"
+}
+
+resource "aws_security_group_rule" "service_ingress_functions_service" {
+    type                     = "ingress"
+    security_group_id        = "${aws_security_group.service.id}"
+    self                     = true
+    from_port                = 8080
+    to_port                  = 8080
+    protocol                 = "tcp"
+}
+
+resource "aws_security_group_rule" "service_egress_functions_service" {
+    type                     = "egress"
+    security_group_id        = "${aws_security_group.service.id}"
+    self                     = true
+    from_port                = 8080
+    to_port                  = 8080
+    protocol                 = "tcp"
+}
+
 resource "aws_security_group_rule" "service_egress_http" {
     type               = "egress"
     security_group_id  = "${aws_security_group.service.id}"

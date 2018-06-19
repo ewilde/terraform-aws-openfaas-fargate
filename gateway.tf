@@ -139,6 +139,15 @@ resource "aws_security_group_rule" "gateway_egress_ecs" {
     protocol                 = "tcp"
 }
 
+resource "aws_security_group_rule" "gateway_egress_functions" {
+    type                     = "egress"
+    security_group_id        = "${aws_security_group.gateway.id}"
+    source_security_group_id = "${aws_security_group.service.id}"
+    from_port                = 8080
+    to_port                  = 8080
+    protocol                 = "tcp"
+}
+
 resource "aws_security_group_rule" "gateway_egress_http" {
     type               = "egress"
     security_group_id  = "${aws_security_group.gateway.id}"

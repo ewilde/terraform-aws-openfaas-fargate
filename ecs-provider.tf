@@ -17,7 +17,12 @@ module "ecs_provider" {
   {
      "name"  : "port",
      "value" : "8081"
+  },
+  {
+     "name"  : "subnet_ids",
+     "value" : "${join(",", aws_subnet.internal.*.id)}"
   }
+
 ]
 EOF
 }
@@ -69,6 +74,25 @@ resource "aws_iam_role_policy" "ecs_provider_role_policy" {
       "Effect": "Allow",
       "Action": [
         "ecs:*"
+      ],
+      "Resource": [
+        "*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ec2:DescribeVpcs",
+        "ec2:DescribeSubnets"
+      ],
+      "Resource": [
+        "*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "servicediscovery:*"
       ],
       "Resource": [
         "*"

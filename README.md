@@ -1,3 +1,6 @@
+# Overview
+![diagram of the openfaas on fargate architecture](./docs/architecture.png "Openfaas for fargate overview")
+
 # Prerequisites
 ## Terraform variables
 |Name|Description|
