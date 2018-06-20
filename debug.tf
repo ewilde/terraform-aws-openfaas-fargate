@@ -108,6 +108,16 @@ resource "aws_security_group_rule" "bastion_egress_gateway" {
     protocol                 = "tcp"
 }
 
+resource "aws_security_group_rule" "bastion_egress_services" {
+    count                    = "${var.debug}"
+    type                     = "egress"
+    security_group_id        = "${aws_security_group.bastion.id}"
+    source_security_group_id = "${aws_security_group.service.id}"
+    from_port                = 8080
+    to_port                  = 8080
+    protocol                 = "tcp"
+}
+
 resource "aws_security_group_rule" "bastion_egress_ecs_provider" {
     count                    = "${var.debug}"
     type                     = "egress"

@@ -52,6 +52,7 @@ resource "aws_security_group_rule" "service_ingress_functions_from_gateway" {
     from_port                = 8080
     to_port                  = 8080
     protocol                 = "tcp"
+    count                    = "${var.debug}"
 }
 
 resource "aws_security_group_rule" "service_ingress_functions_service" {
