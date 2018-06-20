@@ -44,10 +44,10 @@ resource "aws_ecs_task_definition" "main" {
         "options": {
           "awslogs-group": "${aws_cloudwatch_log_group.main.name}",
           "awslogs-region": "${var.aws_region}",
-          "awslogs-stream-prefix": "gateway"
+          "awslogs-stream-prefix": "${var.name}"
         }
     },
-    "name": "gateway",
+    "name": "${var.name}",
     "healthCheck": {
         "retries": 1,
         "command": ${var.task_health_check_command},
