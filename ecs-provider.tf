@@ -21,6 +21,10 @@ module "ecs_provider" {
   {
      "name"  : "subnet_ids",
      "value" : "${join(",", aws_subnet.internal.*.id)}"
+  },
+  {
+     "name"  : "security_group_id",
+     "value" : "${aws_security_group.service.id}"
   }
 
 ]
