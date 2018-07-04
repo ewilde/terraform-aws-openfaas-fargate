@@ -22,6 +22,22 @@ module "nats" {
 CMD
 }
 
+resource "aws_service_discovery_service" "nats" {
+    name = "nats"
+    dns_config {
+        namespace_id = "${aws_service_discovery_private_dns_namespace.openfaas.id}"
+        dns_records {
+            ttl = 10
+            type = "A"
+        }
+        routing_policy = "MULTIVALUE"
+    }
+
+    health_check_custom_config {
+        failure_threshold = 1
+    }
+}
+
 resource "aws_security_group" "nats" {
     name = "${var.namespace}.nats"
     description = "nats security group"
