@@ -1,7 +1,7 @@
 
 resource "aws_ecs_service" "gateway" {
     name             = "gateway"
-    cluster          = "${var.ecs_cluster_name}"
+    cluster          = "${aws_ecs_cluster.openfaas.name}"
     task_definition  = "${aws_ecs_task_definition.gateway.arn}"
     launch_type      = "FARGATE"
     desired_count    = 1
