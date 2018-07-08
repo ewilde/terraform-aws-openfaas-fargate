@@ -1,7 +1,7 @@
 module "ecs_provider" {
     source                        = "./service-internal"
     name                          = "ecs-provider"
-    ecs_cluster_name              = "${var.ecs_cluster_name}"
+    ecs_cluster_name              = "${aws_ecs_cluster.openfaas.name}"
     aws_region                    = "${var.aws_region}"
     desired_count                 = "1"
     security_groups               = ["${aws_security_group.service.id}", "${aws_security_group.ecs_provider.id}"]

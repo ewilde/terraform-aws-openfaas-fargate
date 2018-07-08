@@ -1,6 +1,7 @@
 resource "aws_ecs_cluster" "openfaas" {
     name = "${var.ecs_cluster_name}"
 }
+
 resource "aws_iam_role" "ecs_role" {
     assume_role_policy = "${file("${path.module}/data/iam/ecs-task-assumerole.json")}"
 }

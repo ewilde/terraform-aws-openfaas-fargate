@@ -43,6 +43,7 @@ resource "aws_security_group_rule" "service_ingress_bastion" {
     from_port                = 22
     to_port                  = 22
     protocol                 = "tcp"
+    count                    = "${var.debug}"
 }
 
 resource "aws_security_group_rule" "service_ingress_functions_from_gateway" {
