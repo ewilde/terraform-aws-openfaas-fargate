@@ -3,13 +3,13 @@ default: install uninstall keys init apply destroy
 install: init apply
 
 init:
-    @terraform init
+	@terraform init
 
 apply:
-    @terraform apply
+	@terraform apply
 
 destroy:
-    @terraform destroy
+	@terraform destroy
 
 keys:
 	@ssh-keygen -t rsa -f ./keys/openfaas
