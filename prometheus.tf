@@ -8,23 +8,10 @@ module "prometheus" {
     allowed_subnets               = ["${aws_subnet.internal.*.id}"]
     namespace                     = "${var.namespace}"
     service_discovery_service_arn = "${aws_service_discovery_service.prometheus.arn}"
-    task_image                    = "prom/prometheus"
+    task_image                    = "ewilde/prometheus"
     task_image_version            = "v2.3.1"
     task_role_arn                 = "${aws_iam_role.prometheus_role.arn}"
     task_ports                    = "[{\"containerPort\":9090,\"hostPort\":9090}]"
-    task_env_vars                 = <<EOF
-[
-  {
-     "name"  : "port",
-     "value" : "8081"
-  },
-  {
-     "name"  : "subnet_ids",
-     "value" : "${join(",", aws_subnet.internal.*.id)}"
-  }
-
-]
-EOF
 }
 
 resource "aws_service_discovery_service" "prometheus" {
@@ -62,8 +49,3 @@ resource "aws_iam_role_policy" "prometheus_role_policy" {
 }
 EOF
 }
-
-locals {
-    s = "we"
-}
-
