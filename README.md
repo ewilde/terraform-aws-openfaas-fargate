@@ -77,4 +77,16 @@ Please just re-run `make`, this is an eventual consistency problem see #4
 1. Run `make uninstall`
 2. Patiently wait about `5-10 minutes`
 
+### Known issue
+```Error applying plan:
+
+1 error(s) occurred:
+
+* aws_service_discovery_private_dns_namespace.openfaas (destroy): 1 error(s) occurred:
+```
+
+To resolve this problem manually delete all the service registrations
+
+`aws servicediscovery list-services | jq '.Services[].Id' -r | xargs -L 1 aws servicediscovery delete-service --id`
+
 
