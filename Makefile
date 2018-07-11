@@ -1,4 +1,4 @@
-default: install uninstall keys init apply destroy
+default: install
 
 install: init apply
 
@@ -18,4 +18,4 @@ keys:
 
 uninstall: destroy
 
-.PHONY: install keys
+.PHONY: install uninstall keys init apply destroy
