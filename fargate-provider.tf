@@ -7,7 +7,7 @@ module "ecs_provider" {
     security_groups               = ["${aws_security_group.service.id}", "${aws_security_group.ecs_provider.id}"]
     allowed_subnets               = ["${aws_subnet.internal.*.id}"]
     namespace                     = "${var.namespace}"
-    service_discovery_service_arn = "${aws_service_discovery_service.ecs_provider.arn}"
+    namespace_id                  = "${aws_service_discovery_private_dns_namespace.openfaas.id}"
     task_image                    = "ewilde/faas-ecs"
     task_image_version            = "latest"
     task_role_arn                 = "${aws_iam_role.ecs_provider_role.arn}"

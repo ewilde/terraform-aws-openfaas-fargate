@@ -13,7 +13,7 @@ resource "aws_ecs_service" "gateway" {
     }
 
     load_balancer {
-        target_group_arn = "${aws_lb_target_group.openfaas.arn}"
+        target_group_arn = "${aws_lb_target_group.gateway.arn}"
         container_name = "gateway"
         container_port = 8080
     }
@@ -26,7 +26,7 @@ resource "aws_ecs_service" "gateway" {
         ignore_changes = ["desired_count"]
     }
 
-    depends_on = ["aws_lb_listener.openfaas"]
+    depends_on = ["aws_lb_listener.gateway"]
 }
 
 resource "aws_ecs_task_definition" "gateway" {
@@ -44,11 +44,15 @@ resource "aws_ecs_task_definition" "gateway" {
   "environment": [
     {
       "name": "functions_provider_url",
-      "value": "http://${aws_service_discovery_service.ecs_provider.name}.${aws_service_discovery_private_dns_namespace.openfaas.name}:8081/"
+      "value": "http://${module.ecs_provider.service_discovery_name}.${aws_service_discovery_private_dns_namespace.openfaas.name}:8081/"
     },
     {
       "name": "faas_nats_address",
-      "value": "${aws_service_discovery_service.nats.name}.${aws_service_discovery_private_dns_namespace.openfaas.name}"
+      "value": "${module.nats.service_discovery_name}.${aws_service_discovery_private_dns_namespace.openfaas.name}"
+    },
+    {
+      "name": "faas_prometheus_host",
+      "value": "${module.prometheus.service_discovery_name}.${aws_service_discovery_private_dns_namespace.openfaas.name}"
     },
     {
       "name": "faas_nats_port",
@@ -56,9 +60,8 @@ resource "aws_ecs_task_definition" "gateway" {
     }
   ],
   "essential": true,
-  "image": "ewilde/openfaas-gateway:latest-dev",
+  "image": "openfaas/gateway:0.9.6",
   "memory": 64,
-  "memoryReservation": 64,
   "portMappings": [
     {
       "containerPort": 8080,
@@ -93,10 +96,53 @@ resource "aws_security_group" "gateway" {
     }
 }
 
+resource "aws_service_discovery_service" "gateway" {
+    name = "gateway"
+    dns_config {
+        namespace_id = "${aws_service_discovery_private_dns_namespace.openfaas.id}"
+        dns_records {
+            ttl = 10
+            type = "A"
+        }
+        routing_policy = "MULTIVALUE"
+    }
+
+    health_check_custom_config {
+        failure_threshold = 1
+    }
+}
+
 resource "aws_security_group_rule" "gateway_ingress_alb" {
     type                     = "ingress"
     security_group_id        = "${aws_security_group.gateway.id}"
     source_security_group_id = "${aws_security_group.alb.id}"
+    from_port                = 8080
+    to_port                  = 8080
+    protocol                 = "tcp"
+}
+
+resource "aws_security_group_rule" "gateway_ingress_prometheus" {
+    type                     = "ingress"
+    security_group_id        = "${aws_security_group.gateway.id}"
+    source_security_group_id = "${aws_security_group.prometheus.id}"
+    from_port                = 8080
+    to_port                  = 8080
+    protocol                 = "tcp"
+}
+
+resource "aws_security_group_rule" "gateway_ingress_nats_queue_worker" {
+    type                     = "ingress"
+    security_group_id        = "${aws_security_group.gateway.id}"
+    source_security_group_id = "${aws_security_group.nats_queue_worker.id}"
+    from_port                = 8080
+    to_port                  = 8080
+    protocol                 = "tcp"
+}
+
+resource "aws_security_group_rule" "gateway_ingress_alertmanager" {
+    type                     = "ingress"
+    security_group_id        = "${aws_security_group.gateway.id}"
+    source_security_group_id = "${aws_security_group.alertmanager.id}"
     from_port                = 8080
     to_port                  = 8080
     protocol                 = "tcp"
@@ -145,6 +191,15 @@ resource "aws_security_group_rule" "gateway_egress_functions" {
     source_security_group_id = "${aws_security_group.service.id}"
     from_port                = 8080
     to_port                  = 8080
+    protocol                 = "tcp"
+}
+
+resource "aws_security_group_rule" "gateway_egress_prometheus" {
+    type                     = "egress"
+    security_group_id        = "${aws_security_group.gateway.id}"
+    source_security_group_id = "${aws_security_group.prometheus.id}"
+    from_port                = 9090
+    to_port                  = 9090
     protocol                 = "tcp"
 }
 
