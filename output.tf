@@ -13,3 +13,7 @@ output "service_security_group" {
 output "alb_uri" {
     value = "${aws_lb.openfaas.dns_name}"
 }
+
+output "openfass_uri" {
+    value = "https://${aws_lb.openfaas.dns_name}"
+}

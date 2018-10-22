@@ -7,7 +7,7 @@ module "alertmanager" {
     security_groups               = ["${aws_security_group.service.id}", "${aws_security_group.alertmanager.id}"]
     allowed_subnets               = ["${aws_subnet.internal.*.id}"]
     namespace                     = "${var.namespace}"
-    service_discovery_service_arn = "${aws_service_discovery_service.alertmanager.arn}"
+    namespace_id                  = "${aws_service_discovery_private_dns_namespace.openfaas.id}"
     task_image                    = "ewilde/alertmanager"
     task_image_version            = "v0.15.1"
     task_role_arn                 = "${aws_iam_role.alertmanager_role.arn}"
@@ -38,23 +38,6 @@ resource "aws_security_group_rule" "alertmanager_ingress_alertmanager" {
     to_port                  = 9093
     protocol                 = "tcp"
 }
-
-resource "aws_service_discovery_service" "alertmanager" {
-    name = "alertmanager"
-    dns_config {
-        namespace_id = "${aws_service_discovery_private_dns_namespace.openfaas.id}"
-        dns_records {
-            ttl = 10
-            type = "A"
-        }
-        routing_policy = "MULTIVALUE"
-    }
-
-    health_check_custom_config {
-        failure_threshold = 1
-    }
-}
-
 
 resource "aws_iam_role" "alertmanager_role" {
     name = "${var.namespace}-alertmanager-provider-role"

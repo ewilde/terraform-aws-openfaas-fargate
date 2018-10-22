@@ -7,7 +7,7 @@ module "nats" {
     security_groups               = ["${aws_security_group.nats.id}", "${aws_security_group.service.id}"]
     allowed_subnets               = ["${aws_subnet.internal.*.id}"]
     namespace                     = "${var.namespace}"
-    service_discovery_service_arn = "${aws_service_discovery_service.nats.arn}"
+    namespace_id                  = "${aws_service_discovery_private_dns_namespace.openfaas.id}"
     task_image                    = "ewilde/nats-streaming"
     task_image_version            = "0.9.2-linux"
     task_role_arn                 = "${aws_iam_role.ecs_role.arn}"
@@ -20,22 +20,6 @@ module "nats" {
     "faas-cluster"
 ]
 CMD
-}
-
-resource "aws_service_discovery_service" "nats" {
-    name = "nats"
-    dns_config {
-        namespace_id = "${aws_service_discovery_private_dns_namespace.openfaas.id}"
-        dns_records {
-            ttl = 10
-            type = "A"
-        }
-        routing_policy = "MULTIVALUE"
-    }
-
-    health_check_custom_config {
-        failure_threshold = 1
-    }
 }
 
 resource "aws_security_group" "nats" {

@@ -15,9 +15,17 @@ resource "aws_ecs_service" "main" {
         registry_arn = "${aws_service_discovery_service.main.arn}"
     }
 
+    load_balancer {
+        target_group_arn = "${aws_lb_target_group.main.arn}"
+        container_name = "${var.name}"
+        container_port = "${var.lb_port}"
+    }
+
     lifecycle {
         ignore_changes = ["desired_count"]
     }
+
+    depends_on = ["aws_lb_listener.main"]
 }
 
 resource "aws_service_discovery_service" "main" {
@@ -33,6 +41,29 @@ resource "aws_service_discovery_service" "main" {
 
     health_check_custom_config {
         failure_threshold = 1
+    }
+}
+
+resource "aws_lb_target_group" "main" {
+    name        = "${var.namespace}-${var.name}"
+    port        = "${var.lb_port}"
+    protocol    = "HTTP"
+    vpc_id      = "${var.vpc_id}"
+
+    target_type = "ip"
+    health_check {
+        path    = "${var.health_check_path}"
+        matcher = "200"
+    }
+}
+
+resource "aws_lb_listener" "main" {
+    load_balancer_arn = "${var.lb_arn}"
+    port              = "${var.lb_port}"
+    protocol          = "HTTP"
+    default_action {
+        target_group_arn = "${aws_lb_target_group.main.arn}"
+        type             = "forward"
     }
 }
 

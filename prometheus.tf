@@ -1,86 +1,25 @@
-resource "aws_ecs_service" "prometheus" {
-    name             = "prometheus"
-    cluster          = "${aws_ecs_cluster.openfaas.name}"
-    task_definition  = "${aws_ecs_task_definition.prometheus.arn}"
-    launch_type      = "FARGATE"
-    desired_count    = 1
-
-    network_configuration {
-        subnets          = ["${aws_subnet.internal.*.id}"]
-        security_groups  = ["${aws_security_group.prometheus.id}"]
-        assign_public_ip = true
-    }
-
-    load_balancer {
-        target_group_arn = "${aws_lb_target_group.prometheus.arn}"
-        container_name = "prometheus"
-        container_port = 9090
-    }
-
-    service_registries {
-        registry_arn = "${aws_service_discovery_service.prometheus.arn}"
-    }
-
-    lifecycle {
-        ignore_changes = ["desired_count"]
-    }
-
-    depends_on = ["aws_lb_listener.prometheus"]
-}
-
-resource "aws_ecs_task_definition" "prometheus" {
-    family                   = "prometheus"
-    requires_compatibilities = ["FARGATE"]
-    network_mode             = "awsvpc"
-    task_role_arn            = "${aws_iam_role.ecs_role.arn}"
-    execution_role_arn       = "${aws_iam_role.ecs_role.arn}"
-    cpu                      = "256"
-    memory                   = "512"
-    container_definitions    = <<DEFINITION
+module "prometheus" {
+    source                        = "./service-internal-with-lb"
+    name                          = "prometheus"
+    ecs_cluster_name              = "${aws_ecs_cluster.openfaas.name}"
+    aws_region                    = "${var.aws_region}"
+    desired_count                 = "1"
+    security_groups               = ["${aws_security_group.service.id}", "${aws_security_group.prometheus.id}"]
+    allowed_subnets               = ["${aws_subnet.internal.*.id}"]
+    namespace                     = "${var.namespace}"
+    namespace_id                  = "${aws_service_discovery_private_dns_namespace.openfaas.id}"
+    task_image                    = "ewilde/prometheus"
+    task_image_version            = "v2.3.1"
+    task_role_arn                 = "${aws_iam_role.prometheus_role.arn}"
+    task_ports                    = "[{\"containerPort\":9090,\"hostPort\":9090}]"
+    task_env_vars                 = <<EOF
 [
-  {
-  "cpu": 256,
-  "essential": true,
-  "image": "ewilde/prometheus:v2.3.1",
-  "memory": 64,
-  "portMappings": [
-    {
-      "containerPort": 9090,
-      "hostPort": 9090
-    }
-  ],
-  "logConfiguration": {
-    "logDriver": "awslogs",
-    "options": {
-      "awslogs-group": "${aws_cloudwatch_log_group.prometheus_log.name}",
-      "awslogs-region": "${var.aws_region}",
-      "awslogs-stream-prefix": "prometheus"
-    }
-  },
-  "name": "prometheus"
-}
 ]
-DEFINITION
-}
-
-resource "aws_cloudwatch_log_group" "prometheus_log" {
-    name = "${var.namespace}-prometheus"
-}
-
-resource "aws_service_discovery_service" "prometheus" {
-    name = "prometheus"
-    dns_config {
-        namespace_id = "${aws_service_discovery_private_dns_namespace.openfaas.id}"
-        dns_records {
-            ttl = 10
-            type = "A"
-        }
-        routing_policy = "MULTIVALUE"
-    }
-
-    health_check_custom_config {
-        failure_threshold = 1
-    }
+EOF
+    vpc_id = "${aws_vpc.default.id}"
+    lb_arn = "${aws_lb.openfaas.arn}"
+    lb_port = "9090"
+    health_check_path = "/graph"
 }
 
 resource "aws_security_group" "prometheus" {
