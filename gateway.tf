@@ -51,6 +51,10 @@ resource "aws_ecs_task_definition" "gateway" {
       "value": "${module.nats.service_discovery_name}.${aws_service_discovery_private_dns_namespace.openfaas.name}"
     },
     {
+      "name": "faas_prometheus_host",
+      "value": "${module.prometheus.service_discovery_name}.${aws_service_discovery_private_dns_namespace.openfaas.name}"
+    },
+    {
       "name": "faas_nats_port",
       "value": "4222"
     }
@@ -126,6 +130,15 @@ resource "aws_security_group_rule" "gateway_ingress_prometheus" {
     protocol                 = "tcp"
 }
 
+resource "aws_security_group_rule" "gateway_ingress_nats_queue_worker" {
+    type                     = "ingress"
+    security_group_id        = "${aws_security_group.gateway.id}"
+    source_security_group_id = "${aws_security_group.nats_queue_worker.id}"
+    from_port                = 8080
+    to_port                  = 8080
+    protocol                 = "tcp"
+}
+
 resource "aws_security_group_rule" "gateway_ingress_alertmanager" {
     type                     = "ingress"
     security_group_id        = "${aws_security_group.gateway.id}"
@@ -178,6 +191,15 @@ resource "aws_security_group_rule" "gateway_egress_functions" {
     source_security_group_id = "${aws_security_group.service.id}"
     from_port                = 8080
     to_port                  = 8080
+    protocol                 = "tcp"
+}
+
+resource "aws_security_group_rule" "gateway_egress_prometheus" {
+    type                     = "egress"
+    security_group_id        = "${aws_security_group.gateway.id}"
+    source_security_group_id = "${aws_security_group.prometheus.id}"
+    from_port                = 9090
+    to_port                  = 9090
     protocol                 = "tcp"
 }
 

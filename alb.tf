@@ -39,9 +39,19 @@ resource "tls_self_signed_cert" "main" {
 }
 
 resource "aws_iam_server_certificate" "main" {
-    name             = "example_self_signed_cert"
+    name             = "example_self_signed_cert_${random_string.name.result}"
     certificate_body = "${tls_self_signed_cert.main.cert_pem}"
     private_key      = "${tls_private_key.main.private_key_pem}"
+
+    lifecycle {
+        create_before_destroy = true
+        ignore_changes = ["name"]
+    }
+}
+
+resource "random_string" "name" {
+    length = 6
+    special = false
 }
 
 resource "aws_lb_target_group" "gateway" {

@@ -94,7 +94,6 @@ resource "aws_ecs_task_definition" "main" {
           "awslogs-stream-prefix": "${var.name}"
         }
     },
-    "name": "${var.name}",
     "healthCheck": {
         "retries": 1,
         "command": ${var.task_health_check_command},
