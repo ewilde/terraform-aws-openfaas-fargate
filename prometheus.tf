@@ -50,6 +50,15 @@ resource "aws_security_group_rule" "prometheus_ingress_gateway" {
     protocol                 = "tcp"
 }
 
+resource "aws_security_group_rule" "prometheus_egress_gateway" {
+    type                     = "egress"
+    security_group_id        = "${aws_security_group.prometheus.id}"
+    source_security_group_id = "${aws_security_group.gateway.id}"
+    from_port                = 8080
+    to_port                  = 8080
+    protocol                 = "tcp"
+}
+
 resource "aws_security_group_rule" "prometheus_egress_alertmanager" {
     type                     = "egress"
     security_group_id        = "${aws_security_group.prometheus.id}"
