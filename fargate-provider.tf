@@ -1,6 +1,6 @@
 module "ecs_provider" {
     source                        = "./service-internal"
-    name                          = "ecs-provider"
+    name                          = "fargate-provider"
     ecs_cluster_name              = "${aws_ecs_cluster.openfaas.name}"
     aws_region                    = "${var.aws_region}"
     desired_count                 = "1"
@@ -8,7 +8,7 @@ module "ecs_provider" {
     allowed_subnets               = ["${aws_subnet.internal.*.id}"]
     namespace                     = "${var.namespace}"
     namespace_id                  = "${aws_service_discovery_private_dns_namespace.openfaas.id}"
-    task_image                    = "ewilde/faas-ecs"
+    task_image                    = "ewilde/faas-fargate"
     task_image_version            = "latest"
     task_role_arn                 = "${aws_iam_role.ecs_provider_role.arn}"
     task_ports                    = "[{\"containerPort\":8081,\"hostPort\":8081}]"

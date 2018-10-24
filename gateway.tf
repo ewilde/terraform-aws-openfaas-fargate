@@ -40,44 +40,44 @@ resource "aws_ecs_task_definition" "gateway" {
     container_definitions    = <<DEFINITION
 [
   {
-  "cpu": 256,
-  "environment": [
-    {
-      "name": "functions_provider_url",
-      "value": "http://${module.ecs_provider.service_discovery_name}.${aws_service_discovery_private_dns_namespace.openfaas.name}:8081/"
-    },
-    {
-      "name": "faas_nats_address",
-      "value": "${module.nats.service_discovery_name}.${aws_service_discovery_private_dns_namespace.openfaas.name}"
-    },
-    {
-      "name": "faas_prometheus_host",
-      "value": "${module.prometheus.service_discovery_name}.${aws_service_discovery_private_dns_namespace.openfaas.name}"
-    },
-    {
-      "name": "faas_nats_port",
-      "value": "4222"
-    }
-  ],
-  "essential": true,
-  "image": "openfaas/gateway:0.9.6",
-  "memory": 64,
-  "portMappings": [
-    {
-      "containerPort": 8080,
-      "hostPort": 8080
-    }
-  ],
-  "logConfiguration": {
-    "logDriver": "awslogs",
-    "options": {
-      "awslogs-group": "${aws_cloudwatch_log_group.gateway_log.name}",
-      "awslogs-region": "${var.aws_region}",
-      "awslogs-stream-prefix": "gateway"
-    }
-  },
-  "name": "gateway"
-}
+      "cpu": 256,
+      "environment": [
+        {
+          "name": "functions_provider_url",
+          "value": "http://${module.ecs_provider.service_discovery_name}.${aws_service_discovery_private_dns_namespace.openfaas.name}:8081/"
+        },
+        {
+          "name": "faas_nats_address",
+          "value": "${module.nats.service_discovery_name}.${aws_service_discovery_private_dns_namespace.openfaas.name}"
+        },
+        {
+          "name": "faas_prometheus_host",
+          "value": "${module.prometheus.service_discovery_name}.${aws_service_discovery_private_dns_namespace.openfaas.name}"
+        },
+        {
+          "name": "faas_nats_port",
+          "value": "4222"
+        }
+      ],
+      "essential": true,
+      "image": "openfaas/gateway:0.9.6",
+      "memory": 64,
+      "portMappings": [
+        {
+          "containerPort": 8080,
+          "hostPort": 8080
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "${aws_cloudwatch_log_group.gateway_log.name}",
+          "awslogs-region": "${var.aws_region}",
+          "awslogs-stream-prefix": "gateway"
+        }
+      },
+      "name": "gateway"
+  }
 ]
 DEFINITION
 }

@@ -11,7 +11,7 @@ module "alertmanager" {
     task_image                    = "ewilde/alertmanager"
     task_image_version            = "v0.15.1"
     task_role_arn                 = "${aws_iam_role.alertmanager_role.arn}"
-    task_ports                    = "[{\"containerPort\":9090,\"hostPort\":9090}]"
+    task_ports                    = "[{\"containerPort\":9093,\"hostPort\":9093}]"
     task_command                  = <<CMD
 [
     "--config.file=/alertmanager.yml",
@@ -36,6 +36,15 @@ resource "aws_security_group_rule" "alertmanager_ingress_alertmanager" {
     source_security_group_id = "${aws_security_group.prometheus.id}"
     from_port                = 9093
     to_port                  = 9093
+    protocol                 = "tcp"
+}
+
+resource "aws_security_group_rule" "alertmanager_egress_gateway" {
+    type                     = "egress"
+    security_group_id        = "${aws_security_group.alertmanager.id}"
+    source_security_group_id = "${aws_security_group.gateway.id}"
+    from_port                = 8080
+    to_port                  = 8080
     protocol                 = "tcp"
 }
 
