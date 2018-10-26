@@ -17,3 +17,7 @@ output "alb_uri" {
 output "openfass_uri" {
     value = "https://${aws_lb.openfaas.dns_name}"
 }
+
+output "login" {
+    value = "echo -n \"${random_string.basic_auth_password.result}\" | faas-cli login --gateway https://${aws_lb.openfaas.dns_name} --username=admin --password-stdin"
+}

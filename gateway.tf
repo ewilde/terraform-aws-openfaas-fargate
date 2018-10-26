@@ -33,14 +33,15 @@ resource "aws_ecs_task_definition" "gateway" {
     family                   = "gateway"
     requires_compatibilities = ["FARGATE"]
     network_mode             = "awsvpc"
-    task_role_arn            = "${aws_iam_role.ecs_role.arn}"
-    execution_role_arn       = "${aws_iam_role.ecs_role.arn}"
+    task_role_arn            = "${aws_iam_role.gateway_role.arn}"
+    execution_role_arn       = "${aws_iam_role.gateway_role.arn}"
     cpu                      = "256"
     memory                   = "512"
     container_definitions    = <<DEFINITION
 [
   {
-      "cpu": 256,
+      "name": "gateway",
+      "cpu": 128,
       "environment": [
         {
           "name": "functions_provider_url",
@@ -57,6 +58,15 @@ resource "aws_ecs_task_definition" "gateway" {
         {
           "name": "faas_nats_port",
           "value": "4222"
+        },
+        {
+          "name": "basic_auth",
+          "value": "true"
+        }
+      ],
+      "volumesFrom": [
+        {
+          "sourceContainer": "gateway-kms"
         }
       ],
       "essential": true,
@@ -76,14 +86,56 @@ resource "aws_ecs_task_definition" "gateway" {
           "awslogs-stream-prefix": "gateway"
         }
       },
-      "name": "gateway"
+      "healthCheck": {
+        "retries": 1,
+        "command": ["CMD-SHELL", "cat /run/secrets/basic-auth-password || exit 1" ],
+        "timeout": 3,
+        "interval": 5,
+        "startPeriod": 5
+      }
+  },
+  {
+      "name": "gateway-kms",
+      "cpu": 128,
+      "memory": 32,
+      "environment": [
+        {
+          "name": "SECRETS",
+          "value": "basic-auth-user,basic-auth-password"
+        }
+      ],
+      "essential": true,
+      "image": "ewilde/kms-template:latest",
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "${aws_cloudwatch_log_group.gateway_log_kms.name}",
+          "awslogs-region": "${var.aws_region}",
+          "awslogs-stream-prefix": "gateway-kms"
+        }
+      },
+      "healthCheck": {
+        "retries": 1,
+        "command": ["CMD-SHELL", "cat /run/secrets/basic-auth-password || exit 1" ],
+        "timeout": 3,
+        "interval": 5,
+        "startPeriod": 5
+      }
   }
 ]
 DEFINITION
+    depends_on = [
+        "aws_secretsmanager_secret_version.basic_auth_password",
+        "aws_secretsmanager_secret_version.basic_auth_user"
+    ]
 }
 
 resource "aws_cloudwatch_log_group" "gateway_log" {
     name = "${var.namespace}-gateway"
+}
+
+resource "aws_cloudwatch_log_group" "gateway_log_kms" {
+    name = "${var.namespace}-gateway-kms"
 }
 
 resource "aws_security_group" "gateway" {
@@ -219,4 +271,58 @@ resource "aws_security_group_rule" "gateway_egress_https" {
     to_port            = 443
     protocol           = "tcp"
     cidr_blocks        = ["0.0.0.0/0"]
+}
+
+resource "random_string" "basic_auth_password" {
+    length  = 32
+    special = false
+}
+
+resource "aws_secretsmanager_secret" "basic_auth_password" {
+    name                    = "basic-auth-password"
+    recovery_window_in_days = 0
+}
+
+resource "aws_secretsmanager_secret_version" "basic_auth_password" {
+    secret_id     = "${aws_secretsmanager_secret.basic_auth_password.id}"
+    secret_string = "${random_string.basic_auth_password.result}"
+}
+
+resource "aws_secretsmanager_secret" "basic_auth_user" {
+    name                    = "basic-auth-user"
+    recovery_window_in_days = 0
+}
+
+resource "aws_secretsmanager_secret_version" "basic_auth_user" {
+    secret_id     = "${aws_secretsmanager_secret.basic_auth_user.id}"
+    secret_string = "admin"
+}
+
+resource "aws_iam_role" "gateway_role" {
+    name = "${var.namespace}-gateway-role"
+    assume_role_policy = "${file("${path.module}/data/iam/ecs-task-assumerole.json")}"
+}
+
+resource "aws_iam_role_policy" "gateway_role_policy" {
+    name = "${var.namespace}-gateway-role-policy"
+    role = "${aws_iam_role.gateway_role.id}"
+
+    policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    ${file("${path.module}/data/iam/log-policy.json")},
+    {
+        "Effect": "Allow",
+        "Action": [
+            "secretsmanager:GetSecretValue"
+        ],
+        "Resource": [
+            "${aws_secretsmanager_secret.basic_auth_user.id}",
+            "${aws_secretsmanager_secret.basic_auth_password.id}"
+        ]
+    }
+  ]
+}
+EOF
 }
