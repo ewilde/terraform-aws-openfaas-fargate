@@ -10,7 +10,7 @@ module "nats_queue_worker" {
     namespace_id                  = "${aws_service_discovery_private_dns_namespace.openfaas.id}"
     task_image                    = "ewilde/queue-worker"
     task_image_version            = "latest" #"0.5.4"
-    task_role_arn                 = "${aws_iam_role.ecs_provider_role.arn}"
+    task_role_arn                 = "${aws_iam_role.ecs_role.arn}"
     task_ports                    = "[]"
     task_env_vars                 = <<EOF
 [

@@ -62,8 +62,8 @@ resource "aws_lb_target_group" "gateway" {
 
     target_type = "ip"
     health_check {
-        path    = "/ui/"
-        matcher = "200,202"
+        path    = "/healthz"
+        matcher = "200"
     }
 }
 
