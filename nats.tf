@@ -31,7 +31,7 @@ resource "aws_ecs_task_definition" "nats" {
         "faas-cluster"
     ],
     "essential": true,
-    "image": "ewilde/nats-streaming:0.9.2-linux",
+    "image": "ewilde/nats-streaming:0.11.2",
     "memory": 64,
     "name": "nats",
     "portMappings": [
