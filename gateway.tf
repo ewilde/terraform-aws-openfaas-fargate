@@ -98,7 +98,7 @@ resource "aws_ecs_task_definition" "gateway" {
       "name": "fargate-provider",
       "cpu": 64,
       "memory": 64,
-      "image": "openfaas/gateway:0.9.6",
+      "image": "ewilde/faas-fargate:latest",
       "environment": [
           {
              "name"  : "port",
@@ -118,14 +118,14 @@ resource "aws_ecs_task_definition" "gateway" {
       "logConfiguration": {
         "logDriver": "awslogs",
         "options": {
-          "awslogs-group": "${aws_cloudwatch_log_group.gateway_log.name}",
+          "awslogs-group": "${aws_cloudwatch_log_group.gateway_log_fargate_provider.name}",
           "awslogs-region": "${var.aws_region}",
-          "awslogs-stream-prefix": "gateway"
+          "awslogs-stream-prefix": "gateway-fargate-provider"
         }
       },
       "healthCheck": {
         "retries": 1,
-        "command": ["CMD-SHELL", "cat /run/secrets/basic-auth-password || exit 1" ],
+        "command": ["CMD-SHELL","ls"],
         "timeout": 3,
         "interval": 5,
         "startPeriod": 5
@@ -169,6 +169,10 @@ DEFINITION
 
 resource "aws_cloudwatch_log_group" "gateway_log" {
     name = "${var.namespace}-gateway"
+}
+
+resource "aws_cloudwatch_log_group" "gateway_log_fargate_provider" {
+    name = "${var.namespace}-gateway-fargate-provider"
 }
 
 resource "aws_cloudwatch_log_group" "gateway_log_kms" {
@@ -265,15 +269,6 @@ resource "aws_security_group_rule" "gateway_egress_nats_management" {
     protocol                 = "tcp"
 }
 
-resource "aws_security_group_rule" "gateway_egress_ecs" {
-    type                     = "egress"
-    security_group_id        = "${aws_security_group.gateway.id}"
-    source_security_group_id = "${aws_security_group.ecs_provider.id}"
-    from_port                = 8081
-    to_port                  = 8081
-    protocol                 = "tcp"
-}
-
 resource "aws_security_group_rule" "gateway_egress_functions" {
     type                     = "egress"
     security_group_id        = "${aws_security_group.gateway.id}"
@@ -358,6 +353,34 @@ resource "aws_iam_role_policy" "gateway_role_policy" {
             "${aws_secretsmanager_secret.basic_auth_user.id}",
             "${aws_secretsmanager_secret.basic_auth_password.id}"
         ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ecs:*"
+      ],
+      "Resource": [
+        "*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ec2:DescribeVpcs",
+        "ec2:DescribeSubnets"
+      ],
+      "Resource": [
+        "*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "servicediscovery:*"
+      ],
+      "Resource": [
+        "*"
+      ]
     }
   ]
 }

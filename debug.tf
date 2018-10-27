@@ -118,16 +118,6 @@ resource "aws_security_group_rule" "bastion_egress_services" {
     protocol                 = "tcp"
 }
 
-resource "aws_security_group_rule" "bastion_egress_ecs_provider" {
-    count                    = "${var.debug}"
-    type                     = "egress"
-    security_group_id        = "${aws_security_group.bastion.id}"
-    source_security_group_id = "${aws_security_group.ecs_provider.id}"
-    from_port                = 8081
-    to_port                  = 8081
-    protocol                 = "tcp"
-}
-
 resource "aws_key_pair" "bastion_ssh" {
     key_name = "${var.bastion_keypair_name}"
     public_key = "${file("${path.module}/keys/${var.bastion_keypair_name}.pub")}"

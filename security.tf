@@ -28,6 +28,16 @@ resource "aws_security_group_rule" "service_ingress_functions_from_bastion" {
     count                    = "${var.debug}"
 }
 
+
+resource "aws_security_group_rule" "service_ingress_functions_from_provider" {
+    type                     = "ingress"
+    security_group_id        = "${aws_security_group.service.id}"
+    source_security_group_id = "${aws_security_group.gateway.id}"
+    from_port                = 8080
+    to_port                  = 8080
+    protocol                 = "tcp"
+}
+
 resource "aws_security_group_rule" "service_ingress_functions_service" {
     type                     = "ingress"
     security_group_id        = "${aws_security_group.service.id}"
