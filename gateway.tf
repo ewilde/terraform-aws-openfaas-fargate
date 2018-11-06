@@ -347,11 +347,32 @@ resource "aws_iam_role_policy" "gateway_role_policy" {
     {
         "Effect": "Allow",
         "Action": [
-            "secretsmanager:GetSecretValue"
+            "secretsmanager:GetSecretValue",
+            "secretsmanager:DescribeSecret"
         ],
         "Resource": [
             "${aws_secretsmanager_secret.basic_auth_user.id}",
-            "${aws_secretsmanager_secret.basic_auth_password.id}"
+            "${aws_secretsmanager_secret.basic_auth_password.id}",
+            "arn:aws:secretsmanager:*:*:secret:openfaas-*"
+        ]
+    },
+    {
+        "Effect": "Allow",
+        "Action": [
+            "iam:CreateRole",
+            "iam:PutRolePolicy"
+        ],
+        "Resource": [
+            "arn:aws:iam::*:role/openfaas-*"
+        ]
+    },
+    {
+        "Effect": "Allow",
+        "Action": [
+            "iam:PassRole"
+        ],
+        "Resource": [
+            "*"
         ]
     },
     {
