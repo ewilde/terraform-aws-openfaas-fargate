@@ -45,7 +45,7 @@ resource "aws_ecs_task_definition" "gateway" {
       "environment": [
         {
           "name": "functions_provider_url",
-          "value": "http://${module.ecs_provider.service_discovery_name}.${aws_service_discovery_private_dns_namespace.openfaas.name}:8081/"
+          "value": "http://localhost:8081/"
         },
         {
           "name": "faas_nats_address",
@@ -94,9 +94,46 @@ resource "aws_ecs_task_definition" "gateway" {
         "startPeriod": 5
       }
   },
+   {
+      "name": "fargate-provider",
+      "cpu": 64,
+      "memory": 64,
+      "image": "ewilde/faas-fargate:latest",
+      "environment": [
+          {
+             "name"  : "port",
+             "value" : "8081"
+          },
+          {
+             "name"  : "subnet_ids",
+             "value" : "${join(",", aws_subnet.internal.*.id)}"
+          },
+          {
+             "name"  : "security_group_id",
+             "value" : "${aws_security_group.service.id}"
+          }
+
+        ],
+      "essential": true,
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "${aws_cloudwatch_log_group.gateway_log_fargate_provider.name}",
+          "awslogs-region": "${var.aws_region}",
+          "awslogs-stream-prefix": "gateway-fargate-provider"
+        }
+      },
+      "healthCheck": {
+        "retries": 1,
+        "command": ["CMD-SHELL","ls"],
+        "timeout": 3,
+        "interval": 5,
+        "startPeriod": 5
+      }
+  },
   {
       "name": "gateway-kms",
-      "cpu": 128,
+      "cpu": 64,
       "memory": 32,
       "environment": [
         {
@@ -132,6 +169,10 @@ DEFINITION
 
 resource "aws_cloudwatch_log_group" "gateway_log" {
     name = "${var.namespace}-gateway"
+}
+
+resource "aws_cloudwatch_log_group" "gateway_log_fargate_provider" {
+    name = "${var.namespace}-gateway-fargate-provider"
 }
 
 resource "aws_cloudwatch_log_group" "gateway_log_kms" {
@@ -228,15 +269,6 @@ resource "aws_security_group_rule" "gateway_egress_nats_management" {
     protocol                 = "tcp"
 }
 
-resource "aws_security_group_rule" "gateway_egress_ecs" {
-    type                     = "egress"
-    security_group_id        = "${aws_security_group.gateway.id}"
-    source_security_group_id = "${aws_security_group.ecs_provider.id}"
-    from_port                = 8081
-    to_port                  = 8081
-    protocol                 = "tcp"
-}
-
 resource "aws_security_group_rule" "gateway_egress_functions" {
     type                     = "egress"
     security_group_id        = "${aws_security_group.gateway.id}"
@@ -315,12 +347,61 @@ resource "aws_iam_role_policy" "gateway_role_policy" {
     {
         "Effect": "Allow",
         "Action": [
-            "secretsmanager:GetSecretValue"
+            "secretsmanager:GetSecretValue",
+            "secretsmanager:DescribeSecret"
         ],
         "Resource": [
             "${aws_secretsmanager_secret.basic_auth_user.id}",
-            "${aws_secretsmanager_secret.basic_auth_password.id}"
+            "${aws_secretsmanager_secret.basic_auth_password.id}",
+            "arn:aws:secretsmanager:*:*:secret:openfaas-*"
         ]
+    },
+    {
+        "Effect": "Allow",
+        "Action": [
+            "iam:CreateRole",
+            "iam:PutRolePolicy"
+        ],
+        "Resource": [
+            "arn:aws:iam::*:role/openfaas-*"
+        ]
+    },
+    {
+        "Effect": "Allow",
+        "Action": [
+            "iam:PassRole"
+        ],
+        "Resource": [
+            "*"
+        ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ecs:*"
+      ],
+      "Resource": [
+        "*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ec2:DescribeVpcs",
+        "ec2:DescribeSubnets"
+      ],
+      "Resource": [
+        "*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "servicediscovery:*"
+      ],
+      "Resource": [
+        "*"
+      ]
     }
   ]
 }
