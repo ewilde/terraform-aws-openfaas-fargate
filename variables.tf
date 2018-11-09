@@ -32,3 +32,21 @@ variable "ecs_cluster_name" {
 variable "bastion_keypair_name" {
     default = "openfaas"
 }
+
+variable "self_signed_enabled" {
+    default = 1
+}
+
+variable "acme_enabled" {
+    default = 0
+}
+
+variable "acme_email_address" {
+    default = "nobody@example.com"
+}
+
+variable "acme_domain_name" {
+    default = ""
+}
+
+variable "alb_logs_bucket" {}

@@ -4,9 +4,11 @@ resource "aws_lb" "openfaas" {
     security_groups    = ["${aws_security_group.alb.id}"]
     subnets            = ["${aws_subnet.external.*.id}"]
     load_balancer_type = "application"
-
+    access_logs {
+        bucket = "${var.alb_logs_bucket}"
+        enabled  = true
+    }
 }
-
 
 resource "tls_private_key" "main" {
     algorithm   = "RSA"
@@ -38,7 +40,7 @@ resource "tls_self_signed_cert" "main" {
     }
 }
 
-resource "aws_iam_server_certificate" "main" {
+resource "aws_iam_server_certificate" "self_signed" {
     name             = "example_self_signed_cert_${random_string.name.result}"
     certificate_body = "${tls_self_signed_cert.main.cert_pem}"
     private_key      = "${tls_private_key.main.private_key_pem}"
@@ -67,11 +69,25 @@ resource "aws_lb_target_group" "gateway" {
     }
 }
 
-resource "aws_lb_listener" "gateway" {
+resource "aws_lb_listener" "gateway_self_signed" {
     load_balancer_arn = "${aws_lb.openfaas.arn}"
     port              = 443
     protocol          = "HTTPS"
-    certificate_arn   = "${aws_iam_server_certificate.main.arn}"
+    certificate_arn   = "${aws_iam_server_certificate.self_signed.arn}"
+    count             = "${var.self_signed_enabled}"
+
+    default_action {
+        target_group_arn = "${aws_lb_target_group.gateway.arn}"
+        type             = "forward"
+    }
+}
+
+resource "aws_lb_listener" "gateway_acme" {
+    load_balancer_arn = "${aws_lb.openfaas.arn}"
+    port              = 443
+    protocol          = "HTTPS"
+    certificate_arn   = "${aws_iam_server_certificate.acme.arn}"
+    count             = "${var.acme_enabled}"
     default_action {
         target_group_arn = "${aws_lb_target_group.gateway.arn}"
         type             = "forward"

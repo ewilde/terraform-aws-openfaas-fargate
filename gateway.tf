@@ -26,7 +26,10 @@ resource "aws_ecs_service" "gateway" {
         ignore_changes = ["desired_count"]
     }
 
-    depends_on = ["aws_lb_listener.gateway"]
+    depends_on = [
+        "aws_lb_listener.gateway_self_signed",
+        "aws_lb_listener.gateway_acme"
+    ]
 }
 
 resource "aws_ecs_task_definition" "gateway" {
