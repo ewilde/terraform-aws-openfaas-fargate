@@ -31,14 +31,13 @@ resource "aws_iam_server_certificate" "acme" {
     }
 }
 
-resource "aws_route53_zone" "main" {
+data "aws_route53_zone" "main" {
     name  = "${var.acme_domain_name}"
-    count = "${var.acme_enabled}"
 }
 
 resource "aws_route53_record" "main" {
     name = "gateway"
-    zone_id = "${aws_route53_zone.main.0.id}"
+    zone_id = "${data.aws_route53_zone.main.id}"
     type    = "A"
     count   = "${var.acme_enabled}"
     alias {

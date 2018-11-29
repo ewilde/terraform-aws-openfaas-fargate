@@ -19,5 +19,9 @@ output "openfass_uri" {
 }
 
 output "login" {
-    value = "echo -n \"${random_string.basic_auth_password.result}\" | faas-cli login --gateway https://${aws_lb.openfaas.dns_name} --username=admin --password-stdin"
+    value = "echo -n \"${random_string.basic_auth_password.result}\" | faas-cli login --gateway https://${aws_lb.openfaas.dns_name} --username=admin --password-stdin --tls-no-verify"
+}
+
+output "login_secure" {
+    value = "echo -n \"${random_string.basic_auth_password.result}\" | faas-cli login --gateway https://gateway.${var.acme_domain_name} --username=admin --password-stdin"
 }
