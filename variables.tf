@@ -45,8 +45,8 @@ variable "acme_email_address" {
     default = "nobody@example.com"
 }
 
-variable "acme_domain_name" {
-    default = ""
+variable "route53_zone_name" {
+    default = "foo"
 }
 
 variable "alb_logs_bucket" {}

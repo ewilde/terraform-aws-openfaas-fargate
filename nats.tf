@@ -43,6 +43,7 @@ resource "aws_ecs_task_definition" "nats" {
         "options": {
           "awslogs-group": "${aws_cloudwatch_log_group.nats.name}",
           "awslogs-region": "${var.aws_region}",
+          "awslogs-stream-prefix": "nats-"
         }
     },
     "healthCheck": {
@@ -90,6 +91,7 @@ resource "aws_ecs_task_definition" "nats" {
         "options": {
           "awslogs-group": "${aws_cloudwatch_log_group.nats_queue_worker.name}",
           "awslogs-region": "${var.aws_region}",
+          "awslogs-stream-prefix": "queue-worker-"
         }
     },
     "healthCheck": {

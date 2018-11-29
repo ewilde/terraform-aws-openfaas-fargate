@@ -86,6 +86,7 @@ resource "aws_ecs_task_definition" "gateway" {
         "options": {
           "awslogs-group": "${aws_cloudwatch_log_group.gateway_log.name}",
           "awslogs-region": "${var.aws_region}",
+          "awslogs-stream-prefix": "gateway-"
         }
       },
       "healthCheck": {
@@ -126,6 +127,7 @@ resource "aws_ecs_task_definition" "gateway" {
         "options": {
           "awslogs-group": "${aws_cloudwatch_log_group.gateway_log_fargate_provider.name}",
           "awslogs-region": "${var.aws_region}",
+          "awslogs-stream-prefix": "provider-"
         }
       },
       "healthCheck": {
@@ -153,6 +155,7 @@ resource "aws_ecs_task_definition" "gateway" {
         "options": {
           "awslogs-group": "${aws_cloudwatch_log_group.gateway_log_kms.name}",
           "awslogs-region": "${var.aws_region}",
+          "awslogs-stream-prefix": "kms-template-"
         }
       },
       "healthCheck": {

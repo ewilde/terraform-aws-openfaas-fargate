@@ -32,7 +32,8 @@ resource "aws_iam_server_certificate" "acme" {
 }
 
 data "aws_route53_zone" "main" {
-    name  = "${var.acme_domain_name}"
+    name  = "${var.route53_zone_name}"
+    count = "${var.acme_enabled}"
 }
 
 resource "aws_route53_record" "main" {

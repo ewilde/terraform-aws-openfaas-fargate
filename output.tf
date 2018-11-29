@@ -15,7 +15,7 @@ output "alb_uri" {
 }
 
 output "openfass_uri" {
-    value = "https://${aws_lb.openfaas.dns_name}"
+    value = "https://gateway.${var.route53_zone_name}/ui/"
 }
 
 output "login" {
@@ -23,5 +23,5 @@ output "login" {
 }
 
 output "login_secure" {
-    value = "echo -n \"${random_string.basic_auth_password.result}\" | faas-cli login --gateway https://gateway.${var.acme_domain_name} --username=admin --password-stdin"
+    value = "echo -n \"${random_string.basic_auth_password.result}\" | faas-cli login --gateway https://gateway.${var.route53_zone_name} --username=admin --password-stdin"
 }
