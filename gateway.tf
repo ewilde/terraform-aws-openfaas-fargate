@@ -63,6 +63,18 @@ resource "aws_ecs_task_definition" "gateway" {
           "value": "4222"
         },
         {
+          "name": "read_timeout",
+          "value": "45s"
+        },
+        {
+          "name": "write_timeout",
+          "value": "45s"
+        },
+        {
+          "name": "upstream_timeout",
+          "value": "60s"
+        },
+        {
           "name": "basic_auth",
           "value": "true"
         }
@@ -101,7 +113,7 @@ resource "aws_ecs_task_definition" "gateway" {
       "name": "fargate-provider",
       "cpu": 64,
       "memory": 64,
-      "image": "ewilde/faas-fargate:latest",
+      "image": "ewilde/faas-fargate:v0.1.0",
       "environment": [
           {
              "name"  : "port",
@@ -367,7 +379,10 @@ resource "aws_iam_role_policy" "gateway_role_policy" {
         "Effect": "Allow",
         "Action": [
             "iam:CreateRole",
-            "iam:PutRolePolicy"
+            "iam:GetRole",
+            "iam:DeleteRole",
+            "iam:PutRolePolicy",
+            "iam:DeleteRolePolicy"
         ],
         "Resource": [
             "arn:aws:iam::*:role/openfaas-*"
